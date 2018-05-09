@@ -1,0 +1,70 @@
+proc generatePDB {sim pdb temp condition} {
+	set saveBase "C:/Users/MD\ LAB/Desktop/Qh/"
+	set output "Output/"
+	set data "/potentialEnergyData"
+	set dcdLocation [concat $output$sim$data]
+	set dcdTrackBack "../../.."
+	set trial "_trial"
+	set dcdBase [concat $sim$trial]
+	set ext ".pdb"
+	set ext2 ".dcd"
+
+	for {set i 1} {$i <= 10} {incr i} {
+		set dcd [concat $dcdBase$i$ext2]
+
+		cd "../TrypsinTrials/Resources/"
+		mol new $pdb
+		cd ".."
+
+		cd $dcdLocation
+		mol addfile $dcd first 0 last 20004 step 4 waitfor all
+		cd $dcdTrackBack
+	
+		set saveLocation [concat $saveBase$temp$condition]
+		set fileName "/trial"
+		set file [concat $saveLocation$fileName$i$ext]
+		set input [atomselect top "all" frame last]
+		
+		$input writepdb $file
+	
+		mol delete all
+	}
+}
+
+proc tempsPDB {temp} {
+	puts $temp
+	
+	set slash "/"
+	set trypsin "trypsin"
+
+	set type "_Alone"
+	set pdb "trypsinPDBs/trypsinAlone.pdb"
+	set condition [concat $slash$temp$type]
+	set sim [concat $trypsin$temp$type]
+
+	generatePDB $sim $pdb $temp $condition
+
+	set type "_2M"
+	set pdb "trypsinPDBs/trypSuc2M.pdb"
+	set condition [concat $slash$temp$type]
+	set sim [concat $trypsin$temp$type]
+	
+	generatePDB $sim $pdb $temp $condition
+
+	set type "_5M"
+	set pdb "trypsinPDBs/trypSuc5M.pdb"
+	set condition [concat $slash$temp$type]
+	set sim [concat $trypsin$temp$type]
+
+	generatePDB $sim $pdb $temp $condition
+}
+
+set script_path [ file dirname [ file normalize [ info script ] ] ]
+
+puts "Generating PDB Files"
+
+set temp "300K"
+
+tempsPDB $temp
+
+cd $script_path

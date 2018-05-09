@@ -1,0 +1,53 @@
+set script_path [ file dirname [ file normalize [ info script ] ] ]
+set pdb "trypsinPDBs/trypsinAlone.pdb"
+set dcdLocation "Output/trypsin350K/potentialEnergyData"
+set dcdTrackBack "../../.."
+set ext ".dat"
+set dcdBase "trypsin350K_trial"
+set ext2 ".dcd"
+
+
+puts "Running HBonds"
+
+for {set i 1} {$i <= 10} {incr i} {
+	puts $i$ 
+	set dcd [concat $dcdBase$i$ext2]
+
+	cd "../TrypsinTrials/Resources/"
+	puts "Loading PDB"
+	mol new $pdb
+	cd ".."
+	
+	cd $dcdLocation
+	puts "Loading DCD"
+	mol addfile $dcd first 0 last 20004 step 4 waitfor all
+	cd $dcdTrackBack
+
+	puts "Water"
+	set sel1 [atomselect top "protein"]
+	set sel2 [atomselect top "water"]
+	set sel3 [atomselect top "resname SUC"]
+
+	set out "C:/Users/MD\ LAB/Desktop/HBonds/350K_alone/hbonds_water"
+	set type "hbonds_water"
+	set file [concat $type$i$ext]
+
+	hbonds -sel1 $sel1 -sel2 $sel2 -writefile yes -plot no -frames all -outdir $out -outfile $file
+	
+	puts "Protein"
+	set out "C:/Users/MD\ LAB/Desktop/HBonds/350K_alone/hbonds_protein"
+	set type "hbonds_protein"
+	set file [concat $type$i$ext]
+
+	hbonds -sel1 $sel1 -writefile yes -plot no -frames all -outdir $out -outfile $file
+	
+	puts "Sucrose"
+	set out "C:/Users/MD\ LAB/Desktop/HBonds/350K_alone/hbonds_sucrose"
+	set type "hbonds_sucrose"
+	set file [concat $type$i$ext]
+	
+	hbonds -sel1 $sel1 -sel2 $sel3 -writefile yes -plot no -frames all -outdir $out -outfile $file
+
+	mol delete all
+}
+cd $script_path

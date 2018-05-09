@@ -1,0 +1,93 @@
+proc measureRgyr {sim pdb temp condition} {
+	set saveBase "C:/Users/MD\ LAB/Desktop/rgyr/"
+	set output "Output/"
+	set data "/potentialEnergyData"
+	set dcdLocation [concat $output$sim$data]
+	set dcdTrackBack "../../.."
+	set trial "_trial"
+	set dcdBase [concat $sim$trial]
+	set ext ".dat"
+	set ext2 ".dcd"
+
+	for {set i 1} {$i <= 10} {incr i} {
+		puts "$i"
+		set dcd [concat $dcdBase$i$ext2]
+		
+		puts "Loading PDB..."
+		cd "../TrypsinTrials/Resources/"
+		mol new $pdb
+		cd ".."
+		
+		
+		cd $dcdLocation
+		mol addfile $dcd first 0 last 20004 step 4 waitfor all
+		puts "Loading DCD..."
+		cd $dcdTrackBack
+	
+		set saveLocation [concat $saveBase$temp$condition]
+		set fileName "/trial"
+		set file [concat $saveLocation$fileName$i$ext]
+		
+		puts "Opening File..."
+		set outfile [open $file w]
+		set nf [molinfo top get numframes]
+		set sel [atomselect top "protein backbone"]
+		
+		puts "getting radius of gyration..."
+		for {set j 1} { $j < $nf } { incr j } {
+ 			$sel frame $j
+ 			puts $outfile "$j [measure rgyr $sel]"
+		}
+		
+		close $outfile
+		puts "File Closed"
+		
+		mol delete all
+	}
+}
+
+proc tempRgyr {temp} {
+	puts $temp
+	
+	set slash "/"
+	set trypsin "trypsin"
+
+	set type "_Alone"
+	set pdb "trypsinPDBs/trypsinAlone.pdb"
+	set condition [concat $slash$temp$type]
+	set sim [concat $trypsin$temp$type]
+
+	measureRgyr $sim $pdb $temp $condition
+
+	set type "_2M"
+	set pdb "trypsinPDBs/trypSuc2M.pdb"
+	set condition [concat $slash$temp$type]
+	set sim [concat $trypsin$temp$type]
+	
+	measureRgyr $sim $pdb $temp $condition
+
+	set type "_5M"
+	set pdb "trypsinPDBs/trypSuc5M.pdb"
+	set condition [concat $slash$temp$type]
+	set sim [concat $trypsin$temp$type]
+
+	measureRgyr $sim $pdb $temp $condition
+}
+
+set script_path [ file dirname [ file normalize [ info script ] ] ]
+
+puts "Running Radius of Gyration"
+
+set temp "300K"
+tempRgyr $temp
+
+set temp "350K"
+tempRgyr $temp
+
+set temp "400K"
+tempRgyr $temp
+
+set temp "500K"
+tempRgyr $temp
+
+cd $script_path
